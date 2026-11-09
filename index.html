@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ผจญภัยแดนภาษาไทย</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    :root {
+      --ink: #203047;
+      --gold: #ffd45a;
+      --pink: #ff6b91;
+      --green: #2e9b69;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 14px;
+      display: grid;
+      place-items: center;
+      color: var(--ink);
+      font-family: system-ui, -apple-system, "Noto Sans Thai", sans-serif;
+      background: linear-gradient(#8ce3ff 0 42%, #c9f3c8 42% 100%);
+    }
+
+    .game {
+      width: min(760px, 100%);
+      overflow: hidden;
+      border: 4px solid white;
+      border-radius: 26px;
+      background: #fffdf6;
+      box-shadow: 0 16px 40px #1a38532c;
+    }
+
+    .sky {
+      position: relative;
+      padding: 18px 16px 14px;
+      text-align: center;
+      background: linear-gradient(180deg, #70d7fa, #c2f4ff);
+    }
+
+    .clouds {
+      position: absolute;
+      inset: 5px 12px auto;
+      display: flex;
+      justify-content: space-between;
+      font-size: 30px;
+      pointer-events: none;
+    }
+
+    .hero { font-size: 46px; line-height: 1.2; }
+    h1 { margin: 4px 0; font-size: clamp(24px, 6vw, 35px); }
+    .subtitle { margin: 0; color: #35556a; }
+
+    .world-banner {
+      margin: 0;
+      padding: 10px;
+      color: white;
+      background: #244e67;
+      text-align: center;
+      font-weight: 800;
+    }
+
+    .content { padding: 16px; }
+
+    .stats {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+      padding: 10px 13px;
+      border-radius: 14px;
+      background: #fff2c7;
+      font-weight: 800;
+    }
+
+    .map {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 5px;
+      margin: 10px 0 15px;
+    }
+
+    .tile {
+      height: 29px;
+      display: grid;
+      place-items: center;
+      border: 2px solid #d5dfd9;
+      border-radius: 9px;
+      color: #738078;
+      background: #edf2e8;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .tile.done { color: white; border-color: #228555; background: #36ac70; }
+    .tile.current { color: #563d00; border-color: #e6a900; background: var(--gold); transform: scale(1.12); }
+
+    .scene {
+      min-height: 90px;
+      display: flex;
+      align-items: end;
+      justify-content: space-around;
+      padding: 8px 14px 0;
+      border: 2px solid #d9e8d2;
+      border-bottom: 9px solid #56a66f;
+      border-radius: 18px 18px 8px 8px;
+      background: linear-gradient(#d7f6ff, #f3ffe5);
+      font-size: 35px;
+    }
+
+    .question-card {
+      margin-top: 14px;
+      padding: 16px;
+      border: 2px solid #eadcae;
+      border-radius: 20px;
+      background: linear-gradient(140deg, #fff9e6, #fff1f5);
+      text-align: center;
+    }
+
+    .question-label {
+      display: inline-block;
+      padding: 5px 12px;
+      border-radius: 99px;
+      color: #604616;
+      background: #f7e8bd;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .sentence {
+      margin: 13px 0 5px;
+      font-size: clamp(20px, 5vw, 28px);
+      line-height: 1.8;
+      font-weight: 750;
+    }
+
+    .target {
+      padding: 1px 7px 3px;
+      border: 2px solid #d5a900;
+      border-radius: 9px;
+      color: #24334b;
+      background: #ffe477;
+      font-weight: 900;
+    }
+
+    .hint { margin: 5px 0 0; color: #728093; }
+
+    .answers {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 13px;
+    }
+
+    button { font: inherit; cursor: pointer; }
+
+    .answer {
+      min-height: 47px;
+      padding: 7px 5px;
+      border: 2px solid #e1e6e8;
+      border-radius: 13px;
+      color: var(--ink);
+      background: white;
+      font-weight: 700;
+    }
+
+    .answer:hover:not(:disabled) {
+      border-color: #63b5c5;
+      background: #eefcff;
+    }
+
+    .answer:disabled { cursor: default; opacity: .84; }
+    .answer.correct { border-color: #37a36d; background: #ddf8e8; opacity: 1; }
+    .answer.wrong { border-color: #e55d7d; background: #ffe2e9; opacity: 1; }
+
+    .feedback {
+      min-height: 45px;
+      margin: 10px 0 3px;
+      padding: 9px;
+      border-radius: 12px;
+      text-align: center;
+      font-weight: 750;
+    }
+
+    .feedback.good { color: #216545; background: #e4f8e9; }
+    .feedback.bad { color: #9c3e5b; background: #fff0f3; }
+
+    .actions { display: flex; justify-content: center; gap: 9px; margin-top: 8px; }
+
+    .primary {
+      padding: 11px 22px;
+      border: 0;
+      border-radius: 14px;
+      color: white;
+      background: linear-gradient(100deg, #26835c, #43b778);
+      box-shadow: 0 4px 10px #19432d29;
+      font-size: 17px;
+      font-weight: 800;
+    }
+
+    .hidden { display: none !important; }
+
+    .result {
+      padding: 28px 16px;
+      text-align: center;
+    }
+
+    .result-emoji { font-size: 66px; }
+    .result h2 { margin: 4px; }
+    .result-score { color: #997000; font-size: 26px; font-weight: 900; }
+    .result-text { color: #607087; }
+
+    @media (max-width: 540px) {
+      .content { padding: 12px; }
+      .answers { grid-template-columns: repeat(2, 1fr); }
+      .map { gap: 3px; }
+      .tile { height: 25px; font-size: 11px; }
+      .scene { min-height: 72px; font-size: 29px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="game">
+    <header class="sky">
+      <div class="clouds"><span>☁️</span><span>☁️</span></div>
+      <div class="hero">🧭</div>
+      <h1>ผจญภัยแดนภาษาไทย</h1>
+      <p class="subtitle">ตอบให้ถูก เก็บดาว แล้วเดินทางต่อ!</p>
+    </header>
+
+    <p class="world-banner" id="worldBanner"></p>
+
+    <section class="content" id="playArea">
+      <div class="stats">
+        <span id="stageText"></span>
+        <span id="scoreText">⭐ 0</span>
+      </div>
+
+      <div class="map" id="map" aria-label="แผนที่ด่าน"></div>
+
+      <div class="scene">
+        <span id="sceneLeft">🌳</span>
+        <span>🧭</span>
+        <span id="sceneRight">🏰</span>
+      </div>
+
+      <section class="question-card">
+        <span class="question-label">ภารกิจประจำด่าน</span>
+        <p class="sentence" id="sentence"></p>
+        <p class="hint">เลือกชนิดของคำที่ไฮไลต์สีเหลือง</p>
+      </section>
+
+      <section class="answers" id="answers"></section>
+      <div class="feedback" id="feedback" aria-live="polite"></div>
+
+      <div class="actions">
+        <button class="primary hidden" id="nextButton">ไปด่านต่อไป ➜</button>
+      </div>
+    </section>
+
+    <section class="result hidden" id="result">
+      <div class="result-emoji">🏆</div>
+      <h2>พิชิตแดนภาษาไทยสำเร็จ!</h2>
+      <p class="result-score" id="finalScore"></p>
+      <p class="result-text" id="finalText"></p>
+      <button class="primary" id="restartButton">🔁 เริ่มการผจญภัยใหม่</button>
+    </section>
+  </main>
+
+  <script>
+    const types = [
+      "คำนาม", "คำสรรพนาม", "คำกริยา", "คำช่วยกริยา",
+      "คำวิเศษณ์", "คำที่เกี่ยวกับจำนวน", "คำบอกกำหนด",
+      "คำบุพบท", "คำเชื่อม", "คำลงท้าย", "คำอุทาน", "คำปฏิเสธ"
+    ];
+
+    const questions = [
+      { before: "", word: "คุณครู", after: " เล่านิทานให้เด็กฟัง", type: "คำนาม" },
+      { before: "ครอบครัวเราไปเที่ยว ", word: "เชียงใหม่", after: " ตอนปิดเทอม", type: "คำนาม" },
+      { before: "", word: "การอ่าน", after: " ช่วยเพิ่มความรู้", type: "คำนาม" },
+
+      { before: "", word: "ฉัน", after: " ชอบวาดภาพดอกไม้", type: "คำสรรพนาม" },
+      { before: "", word: "พวกเรา", after: " ช่วยกันปลูกต้นไม้ในสวน", type: "คำสรรพนาม" },
+      { before: "", word: "เขา", after: " ยืมหนังสือจากห้องสมุด", type: "คำสรรพนาม" },
+
+      { before: "น้อง ", word: "อ่าน", after: " นิทานเรื่องกระต่ายกับเต่า", type: "คำกริยา" },
+      { before: "คุณตา ", word: "ปลูก", after: " ผักไว้หลังบ้าน", type: "คำกริยา" },
+      { before: "เด็ก ๆ ", word: "หัวเราะ", after: " อย่างมีความสุข", type: "คำกริยา" },
+
+      { before: "น้อง ", word: "กำลัง", after: " ทำการบ้านอยู่ที่โต๊ะ", type: "คำช่วยกริยา" },
+      { before: "พรุ่งนี้เรา ", word: "จะ", after: " ไปเยี่ยมคุณยาย", type: "คำช่วยกริยา" },
+      { before: "นักเรียน ", word: "ต้อง", after: " ตั้งใจทำงานให้เสร็จ", type: "คำช่วยกริยา" },
+
+      { before: "กระต่ายวิ่ง ", word: "เร็ว", after: " ไปถึงเส้นชัย", type: "คำวิเศษณ์" },
+      { before: "คุณปู่เดิน ", word: "ช้า ๆ", after: " ไปตามทางในสวน", type: "คำวิเศษณ์" },
+      { before: "นักเรียนร้องเพลง ", word: "ไพเราะ", after: " บนเวที", type: "คำวิเศษณ์" },
+
+      { before: "แม่ซื้อส้ม ", word: "สาม", after: " ผลจากตลาด", type: "คำที่เกี่ยวกับจำนวน" },
+      { before: "เขาสอบได้ ", word: "ที่หนึ่ง", after: " ในการแข่งขัน", type: "คำที่เกี่ยวกับจำนวน" },
+      { before: "เราจะซื้อผ้า ", word: "อีก", after: " 2 ตัว", type: "คำที่เกี่ยวกับจำนวน" },
+      { before: "ห้องนี้มีนักเรียน 40 คน ", word: "ถ้วน", after: "", type: "คำที่เกี่ยวกับจำนวน" },
+
+      { before: "รถคัน", word: "นี้", after: " เป็นรถของคุณพ่อ", type: "คำบอกกำหนด" },
+      { before: "เก้าอี้ตัว", word: "นั้น", after: " ยังว่างอยู่", type: "คำบอกกำหนด" },
+      { before: "หนังสือเล่ม", word: "ไหน", after: " น่าสนใจที่สุด", type: "คำบอกกำหนด" },
+
+      { before: "แมวน้อยหลบอยู่ ", word: "ใต้", after: " โต๊ะ", type: "คำบุพบท" },
+      { before: "สมุดเล่มนี้เป็น ", word: "ของ", after: " ฉัน", type: "คำบุพบท" },
+      { before: "พ่อทำงานหนัก ", word: "เพื่อ", after: " ครอบครัว", type: "คำบุพบท" },
+      { before: "เขาเดินทาง ", word: "โดย", after: " รถไฟ", type: "คำบุพบท" },
+
+      { before: "พ่อ ", word: "และ", after: " แม่ช่วยกันทำอาหารเย็น", type: "คำเชื่อม" },
+      { before: "ฉันอยากไปเที่ยว ", word: "แต่", after: " วันนี้ฝนตก", type: "คำเชื่อม" },
+      { before: "เขาไม่มาทำงาน ", word: "เพราะ", after: " ลูกไม่สบาย", type: "คำเชื่อม" },
+      { before: "เราควรประหยัดพลังงาน ", word: "กล่าวคือ", after: " ควรปิดไฟเมื่อไม่ใช้", type: "คำเชื่อม" },
+
+      { before: "อย่าลืมเอาหนังสือมาด้วย ", word: "นะ", after: "", type: "คำลงท้าย" },
+      { before: "พวกเราไปอ่านหนังสือกัน ", word: "เถอะ", after: "", type: "คำลงท้าย" },
+      { before: "หนูทำการบ้านเสร็จแล้ว ", word: "ค่ะ", after: "", type: "คำลงท้าย" },
+
+      { before: "", word: "ไชโย", after: "! ทีมของเราได้รับรางวัลชนะเลิศ", type: "คำอุทาน" },
+      { before: "", word: "ว้าย", after: "! ผีเสื้อบินมาเกาะแขน", type: "คำอุทาน" },
+      { before: "", word: "โถ", after: "! ไม่น่าเลย", type: "คำอุทาน" },
+
+      { before: "เขา ", word: "ไม่", after: " ลืมทำการบ้านก่อนมาโรงเรียน", type: "คำปฏิเสธ" },
+      { before: "ฉัน ", word: "มิได้", after: " ตั้งใจทำแจกันแตก", type: "คำปฏิเสธ" },
+      { before: "ถาม: เธอเหนื่อยไหม? ตอบ: ", word: "เปล่า", after: "", type: "คำปฏิเสธ" },
+      { before: "ถาม: คุณมากับภรรยาหรือ? ตอบ: ", word: "หามิได้", after: "", type: "คำปฏิเสธ" }
+    ];
+
+    const worlds = [
+      { name: "ด่าน 1: ป่าคำนาม", from: 0, to: 9, left: "🌳", right: "🍄" },
+      { name: "ด่าน 2: สะพานคำ", from: 10, to: 19, left: "🌉", right: "🌷" },
+      { name: "ด่าน 3: ภูเขาไวยากรณ์", from: 20, to: 29, left: "⛰️", right: "☁️" },
+      { name: "ด่าน 4: ปราสาทภาษาไทย", from: 30, to: 39, left: "🌴", right: "🏰" }
+    ];
+
+    let current = 0;
+    let score = 0;
+    let locked = false;
+
+    const $ = (id) => document.getElementById(id);
+
+    function worldFor(index) {
+      return worlds.findIndex((world) => index >= world.from && index <= world.to);
+    }
+
+    function drawMap() {
+      const map = $("map");
+      map.replaceChildren();
+
+      questions.forEach((_, index) => {
+        const tile = document.createElement("div");
+        tile.className = "tile";
+        tile.textContent = index + 1;
+
+        if (index < current) tile.classList.add("done");
+        if (index === current) tile.classList.add("current");
+
+        map.appendChild(tile);
+      });
+    }
+
+    function shuffle(items) {
+      const copy = [...items];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function showQuestion() {
+      locked = false;
+      const q = questions[current];
+      const worldIndex = worldFor(current);
+      const world = worlds[worldIndex];
+
+      $("worldBanner").textContent = world.name;
+      $("sceneLeft").textContent = world.left;
+      $("sceneRight").textContent = world.right;
+      $("stageText").textContent = `🚩 ด่าน ${current + 1} / ${questions.length}`;
+      $("scoreText").textContent = `⭐ ${score}`;
+      $("feedback").textContent = "";
+      $("feedback").className = "feedback";
+      $("nextButton").classList.add("hidden");
+
+      $("sentence").replaceChildren(
+        document.createTextNode(q.before),
+        Object.assign(document.createElement("span"), {
+          className: "target",
+          textContent: q.word
+        }),
+        document.createTextNode(q.after)
+      );
+
+      drawMap();
+
+      const answers = $("answers");
+      answers.replaceChildren();
+
+      shuffle(types).forEach((type) => {
+        const button = document.createElement("button");
+        button.className = "answer";
+        button.textContent = type;
+        button.addEventListener("click", () => chooseAnswer(button, type));
+        answers.appendChild(button);
+      });
+    }
+
+    function chooseAnswer(selected, answer) {
+      if (locked) return;
+      locked = true;
+
+      const correct = questions[current].type;
+
+      [...$("answers").children].forEach((button) => {
+        button.disabled = true;
+        if (button.textContent === correct) button.classList.add("correct");
+      });
+
+      if (answer === correct) {
+        score++;
+        $("feedback").textContent = "ถูกต้อง! เก็บดาวได้ ⭐";
+        $("feedback").classList.add("good");
+      } else {
+        selected.classList.add("wrong");
+        $("feedback").textContent = `ยังไม่ถูก คำนี้เป็น “${correct}” ลองจำไว้เดินทางต่อกันนะ`;
+        $("feedback").classList.add("bad");
+      }
+
+      $("scoreText").textContent = `⭐ ${score}`;
+      $("stageText").textContent = `ด่าน ${current + 1} ผ่านแล้ว!`;
+      $("nextButton").textContent =
+        current === questions.length - 1 ? "ดูคะแนนสุดท้าย 🏆" : "เดินทางต่อ ➜";
+      $("nextButton").classList.remove("hidden");
+      drawMap();
+    }
+
+    $("nextButton").addEventListener("click", () => {
+      current++;
+
+      if (current < questions.length) {
+        showQuestion();
+      } else {
+        $("playArea").classList.add("hidden");
+        $("result").classList.remove("hidden");
+        $("finalScore").textContent = `เก็บได้ ${score} ดาว จาก ${questions.length} ดาว`;
+        $("finalText").textContent =
+          score >= 35 ? "สุดยอดนักผจญภัยแห่งภาษาไทย!" :
+          score >= 25 ? "เก่งมาก! เดินทางผ่านด่านได้ไกลแล้ว" :
+          "ภารกิจสำเร็จแล้ว ลองทบทวนชนิดของคำเพิ่มเติมนะ";
+      }
+    });
+
+    $("restartButton").addEventListener("click", () => {
+      current = 0;
+      score = 0;
+      $("playArea").classList.remove("hidden");
+      $("result").classList.add("hidden");
+      showQuestion();
+    });
+
+    showQuestion();
+  </script>
+</body>
+</html>
